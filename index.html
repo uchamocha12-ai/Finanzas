@@ -41,6 +41,7 @@
     .formGrid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:15px}.field{display:flex;flex-direction:column;gap:6px}.field.full{grid-column:1/-1}.field label{font-size:11px;text-transform:uppercase;font-weight:800;color:var(--muted);letter-spacing:.4px}.field input,.field select,.field textarea{border:1px solid var(--line);border-radius:13px;padding:12px;background:#fff;color:var(--ink)}.field textarea{min-height:80px;resize:vertical}.checkline{display:flex;align-items:center;gap:9px;background:#f7fafb;border:1px solid var(--line);padding:11px;border-radius:13px}.checkline input{width:19px;height:19px}.primary{width:100%;border:0;border-radius:14px;background:var(--primary);color:#fff;padding:13px;font-weight:800;margin-top:14px}.secondary{width:100%;border:1px solid var(--line);border-radius:14px;background:#fff;color:var(--ink);padding:12px;font-weight:800;margin-top:8px}.danger{color:var(--danger);border-color:#f0c7c3}.payList{margin-top:12px;display:flex;flex-direction:column;gap:8px}.payItem{border:1px solid var(--line);border-radius:14px;padding:10px;display:flex;justify-content:space-between;gap:10px}.small{font-size:12px;color:var(--muted)}
     .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(92px + env(safe-area-inset-bottom));background:#163949;color:#fff;padding:10px 14px;border-radius:999px;font-size:12px;opacity:0;pointer-events:none;transition:.25s;z-index:200}.toast.show{opacity:1}
     .settingsCard{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:10px}.settingsCard h3{margin:0 0 7px;font-size:16px}.settingsCard p{font-size:12px;color:var(--muted);line-height:1.5}.settingsCard .secondary{margin-top:6px}
+    .fileActions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.fileBtn{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:13px;padding:12px 10px;font-weight:800;text-align:center}.fileBtn:active{transform:scale(.99)}.fileInfo{margin-top:7px;padding:9px 11px;border-radius:11px;background:#f7fafb;border:1px dashed #c7d6da;color:var(--muted);font-size:12px;word-break:break-word}.fileInfo.hasFile{border-style:solid;background:#eef8f7;color:var(--primary);font-weight:700}
     @media(min-width:700px){.summary{grid-template-columns:repeat(4,1fr)}.receiptGrid{grid-template-columns:repeat(4,1fr)}.fab{right:max(24px,calc((100vw - 880px)/2 + 24px))}.sheet{border-radius:26px;margin-bottom:18px}.modalBack{align-items:center}.formGrid{grid-template-columns:repeat(2,1fr)}}
     @media(max-width:480px){.formGrid{grid-template-columns:1fr}.field.full{grid-column:auto}.metric .v{font-size:20px}.bill{grid-template-columns:42px 1fr auto}.amount{font-size:13px}}
   </style>
@@ -140,7 +141,15 @@
       <div class="field"><label>Fecha de pago</label><input id="payDate" type="date" required></div>
       <div class="field"><label>Medio de pago</label><select id="payMethod"><option>Transferencia</option><option>PSE</option><option>Débito automático</option><option>Tarjeta débito</option><option>Tarjeta crédito</option><option>Efectivo</option><option>Otro</option></select></div>
       <div class="field"><label>Referencia</label><input id="payReference" placeholder="Opcional"></div>
-      <div class="field full"><label>Comprobante (foto o PDF)</label><input id="payReceipt" type="file" accept="image/*,application/pdf" capture="environment"></div>
+      <div class="field full"><label>Comprobante (foto o PDF)</label>
+        <div class="fileActions">
+          <button class="fileBtn" id="chooseReceiptBtn" type="button">🖼️ Subir foto / PDF</button>
+          <button class="fileBtn" id="takeReceiptBtn" type="button">📷 Tomar foto</button>
+        </div>
+        <input id="payReceipt" type="file" accept="image/*,application/pdf" hidden>
+        <input id="payCamera" type="file" accept="image/*" capture="environment" hidden>
+        <div class="fileInfo" id="receiptFileInfo">Ningún comprobante seleccionado</div>
+      </div>
       <div class="field full"><label>Observación</label><textarea id="payNotes" placeholder="Opcional"></textarea></div>
     </div>
     <button class="primary" type="submit">Guardar pago</button>
@@ -157,7 +166,7 @@
 <script>
 (() => {
   const DB_NAME='mis-cuentas-db', DB_VERSION=1;
-  let db, currentBillId=null, activeStatus='all';
+  let db, currentBillId=null, activeStatus='all', selectedReceiptFile=null;
   const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
   const today=()=>new Date().toISOString().slice(0,10);
   const monthKey=(d=new Date())=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
@@ -227,8 +236,9 @@
   async function editBill(){const b=await get('bills',currentBillId);if(!b)return;closeModal('detailModal');$('#billModalTitle').textContent='Editar cuenta';$('#billId').value=b.id;$('#billName').value=b.name;$('#billCategory').value=b.category;$('#billAmount').value=b.amount;$('#billDue').value=b.due;$('#billMonth').value=b.month;$('#billRecurring').checked=!!b.recurring;$('#billNotes').value=b.notes||'';$('#deleteBillBtn').style.display='block';openModal('billModal')}
   async function deleteBill(){const id=$('#billId').value;if(!id)return;if(!confirm('¿Eliminar esta cuenta y sus pagos?'))return;const ps=(await all('payments')).filter(p=>p.billId===id);for(const p of ps)await del('payments',p.id);await del('bills',id);closeModal('billModal');toast('Cuenta eliminada');render()}
 
-  function openPayment(){const m=$('#monthPicker').value;$('#paymentForm').reset();$('#paymentBillId').value=currentBillId;$('#payDate').value=today();openModal('paymentModal')}
-  async function savePayment(e){e.preventDefault();const file=$('#payReceipt').files[0];const p={id:uuid(),billId:$('#paymentBillId').value,amount:Number($('#payAmount').value),date:$('#payDate').value,method:$('#payMethod').value,reference:$('#payReference').value.trim(),notes:$('#payNotes').value.trim(),receiptBlob:file||null,receiptName:file?.name||null,receiptType:file?.type||null,createdAt:Date.now()};await put('payments',p);closeModal('paymentModal');closeModal('detailModal');toast('Pago registrado');render()}
+  function setReceiptFile(file){selectedReceiptFile=file||null;const info=$('#receiptFileInfo');if(selectedReceiptFile){const kb=Math.max(1,Math.round(selectedReceiptFile.size/1024));info.textContent=`✓ ${selectedReceiptFile.name || 'Foto del comprobante'} · ${kb} KB`;info.classList.add('hasFile')}else{info.textContent='Ningún comprobante seleccionado';info.classList.remove('hasFile')}}
+  function openPayment(){const m=$('#monthPicker').value;$('#paymentForm').reset();selectedReceiptFile=null;setReceiptFile(null);$('#paymentBillId').value=currentBillId;$('#payDate').value=today();openModal('paymentModal')}
+  async function savePayment(e){e.preventDefault();const file=selectedReceiptFile;const p={id:uuid(),billId:$('#paymentBillId').value,amount:Number($('#payAmount').value),date:$('#payDate').value,method:$('#payMethod').value,reference:$('#payReference').value.trim(),notes:$('#payNotes').value.trim(),receiptBlob:file||null,receiptName:file?.name||null,receiptType:file?.type||null,createdAt:Date.now()};await put('payments',p);closeModal('paymentModal');closeModal('detailModal');toast('Pago registrado');render()}
 
   async function exportBackup(){const bills=await all('bills'),payments=await all('payments');const ser=[];for(const p of payments){let receiptBase64=null;if(p.receiptBlob)receiptBase64=await blobToDataURL(p.receiptBlob);ser.push({...p,receiptBlob:undefined,receiptBase64})}const payload={app:'Mis Cuentas',version:1,exportedAt:new Date().toISOString(),bills,payments:ser};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`mis-cuentas-respaldo-${today()}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);toast('Respaldo creado')}
   const blobToDataURL=blob=>new Promise(res=>{const r=new FileReader();r.onload=()=>res(r.result);r.readAsDataURL(blob)});
@@ -243,11 +253,14 @@
     $$('.navbtn').forEach(b=>b.onclick=()=>{$$('.navbtn').forEach(x=>x.classList.remove('active'));b.classList.add('active');$$('.view').forEach(v=>v.classList.remove('active'));$('#'+b.dataset.view).classList.add('active');$('#addBillFab').style.display=b.dataset.view==='settingsView'?'none':'block';render()});
     $$('.close').forEach(b=>b.onclick=()=>closeModal(b.dataset.close));$$('.modalBack').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')}));
     $('#addBillFab').onclick=openNewBill;$('#billForm').onsubmit=saveBill;$('#deleteBillBtn').onclick=deleteBill;$('#editBillBtn').onclick=editBill;$('#addPaymentBtn').onclick=openPayment;$('#paymentForm').onsubmit=savePayment;
+    $('#chooseReceiptBtn').onclick=()=>$('#payReceipt').click();$('#takeReceiptBtn').onclick=()=>$('#payCamera').click();
+    $('#payReceipt').onchange=e=>{const f=e.target.files?.[0];if(f){$('#payCamera').value='';setReceiptFile(f)}};
+    $('#payCamera').onchange=e=>{const f=e.target.files?.[0];if(f){$('#payReceipt').value='';setReceiptFile(f)}};
     $('#billSearch').oninput=render;$('#receiptSearch').oninput=render;$$('#statusFilters .chip').forEach(c=>c.onclick=()=>{$$('#statusFilters .chip').forEach(x=>x.classList.remove('active'));c.classList.add('active');activeStatus=c.dataset.status;render()});
     $('#exportBtn').onclick=exportBackup;$('#quickBackup').onclick=exportBackup;$('#importBtn').onclick=()=>$('#importFile').click();$('#importFile').onchange=e=>e.target.files[0]&&importBackup(e.target.files[0]);$('#demoBtn').onclick=loadDemo;$('#wipeBtn').onclick=wipe;
   }
 
-  async function init(){await openDB();setupUI();await render();if('serviceWorker'in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});}
+  async function init(){await openDB();setupUI();await render();if('serviceWorker'in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js?v=2').catch(()=>{});}
   init().catch(e=>{console.error(e);alert('No se pudo iniciar la aplicación: '+e.message)});
 })();
 </script>
