@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f766e" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Mis Cuentas" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="icons/icon-180.png" />
+  <title>Mis Cuentas</title>
+  <style>
+    :root{
+      --bg:#f4f7f8; --card:#fff; --ink:#123047; --muted:#6b7f8e;
+      --primary:#0f766e; --primary2:#0e8d84; --line:#dbe5e8;
+      --ok:#14804a; --warn:#b7791f; --danger:#c0392b; --soft:#eef8f7;
+      --shadow:0 10px 30px rgba(18,48,71,.08); --radius:20px;
+    }
+    *{box-sizing:border-box} html,body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+    body{min-height:100vh;padding-bottom:calc(84px + env(safe-area-inset-bottom))}
+    button,input,select,textarea{font:inherit} button{cursor:pointer}
+    .app{max-width:880px;margin:0 auto;min-height:100vh}
+    header{padding:calc(18px + env(safe-area-inset-top)) 18px 12px;background:linear-gradient(145deg,#0b615b,#12877e);color:#fff;border-radius:0 0 28px 28px;box-shadow:var(--shadow)}
+    .topline{display:flex;align-items:center;justify-content:space-between;gap:12px}.brand{font-weight:800;font-size:24px;letter-spacing:-.4px}.tag{font-size:12px;opacity:.86;margin-top:3px}
+    .monthbar{display:flex;gap:8px;align-items:center;margin-top:18px}.monthbar input{flex:1;min-width:0;background:rgba(255,255,255,.96);border:0;border-radius:14px;padding:12px 14px;color:var(--ink);font-weight:700}
+    .iconbtn{border:0;background:rgba(255,255,255,.16);color:#fff;width:42px;height:42px;border-radius:14px;font-size:20px}
+    main{padding:16px}.view{display:none}.view.active{display:block}
+    .summary{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.metric{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;box-shadow:0 5px 18px rgba(18,48,71,.04)}.metric .k{font-size:11px;text-transform:uppercase;font-weight:800;color:var(--muted);letter-spacing:.4px}.metric .v{font-size:22px;font-weight:800;margin-top:5px}.metric small{color:var(--muted)}
+    .progressCard{margin-top:10px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px}.progressTop{display:flex;justify-content:space-between;font-weight:800}.bar{height:11px;background:#e9eff1;border-radius:99px;overflow:hidden;margin-top:10px}.bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--primary),#22a399);width:0;border-radius:99px}
+    .sectionTitle{display:flex;align-items:center;justify-content:space-between;margin:20px 2px 10px}.sectionTitle h2{font-size:18px;margin:0}.sectionTitle span{font-size:12px;color:var(--muted)}
+    .list{display:flex;flex-direction:column;gap:9px}.bill{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:13px;display:grid;grid-template-columns:44px 1fr auto;gap:11px;align-items:center;box-shadow:0 4px 12px rgba(18,48,71,.035)}.catIcon{width:44px;height:44px;border-radius:14px;background:var(--soft);display:grid;place-items:center;font-size:21px}.billName{font-weight:800}.billMeta{font-size:12px;color:var(--muted);margin-top:3px}.amount{text-align:right;font-weight:800}.status{display:inline-flex;margin-top:4px;padding:4px 8px;border-radius:999px;font-size:10px;font-weight:800}.st-paid{background:#e9f8ef;color:var(--ok)}.st-partial{background:#fff6df;color:var(--warn)}.st-overdue{background:#fdeceb;color:var(--danger)}.st-pending{background:#eef2f4;color:#596b78}
+    .empty{background:var(--card);border:1px dashed #bfd0d5;border-radius:18px;padding:22px;text-align:center;color:var(--muted)}
+    .fab{position:fixed;right:max(18px,calc((100vw - 880px)/2 + 18px));bottom:calc(92px + env(safe-area-inset-bottom));width:58px;height:58px;border:0;border-radius:18px;background:var(--primary);color:#fff;font-size:30px;box-shadow:0 10px 25px rgba(15,118,110,.3);z-index:20}
+    nav{position:fixed;left:0;right:0;bottom:0;background:rgba(255,255,255,.96);backdrop-filter:blur(14px);border-top:1px solid var(--line);padding:7px 10px calc(7px + env(safe-area-inset-bottom));display:flex;justify-content:center;z-index:30}.navinner{width:min(880px,100%);display:grid;grid-template-columns:repeat(5,1fr)}.navbtn{border:0;background:none;color:#6c7d88;padding:5px 2px;font-size:10px;font-weight:700}.navbtn b{display:block;font-size:20px;line-height:22px}.navbtn.active{color:var(--primary)}
+    .search{width:100%;border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:#fff;margin-bottom:10px}
+    .filters{display:flex;gap:7px;overflow:auto;padding-bottom:6px}.chip{white-space:nowrap;border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 11px;font-size:12px;font-weight:700;color:var(--ink)}.chip.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+    .receiptGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.receipt{background:#fff;border:1px solid var(--line);border-radius:17px;overflow:hidden}.receiptPreview{height:130px;background:#edf2f4;display:grid;place-items:center;color:var(--muted);font-size:42px}.receiptPreview img{width:100%;height:100%;object-fit:cover}.receiptBody{padding:10px}.receiptBody strong{font-size:13px}.receiptBody div{font-size:11px;color:var(--muted);margin-top:3px}
+    .chartCard{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px;margin-top:12px}.chartRow{display:grid;grid-template-columns:95px 1fr 80px;gap:8px;align-items:center;margin:10px 0;font-size:12px}.chartTrack{height:10px;background:#edf1f2;border-radius:99px;overflow:hidden}.chartFill{height:100%;background:var(--primary);border-radius:99px}.right{text-align:right;font-weight:800}
+    .modalBack{position:fixed;inset:0;background:rgba(9,28,39,.45);display:none;align-items:flex-end;justify-content:center;z-index:100}.modalBack.open{display:flex}.sheet{background:#fff;width:min(680px,100%);max-height:92vh;overflow:auto;border-radius:26px 26px 0 0;padding:20px 18px calc(22px + env(safe-area-inset-bottom));box-shadow:0 -10px 40px rgba(0,0,0,.18)}.sheetHead{display:flex;justify-content:space-between;align-items:center}.sheetHead h3{margin:0;font-size:20px}.close{border:0;background:#eef3f4;border-radius:12px;width:36px;height:36px;font-size:20px}
+    .formGrid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:15px}.field{display:flex;flex-direction:column;gap:6px}.field.full{grid-column:1/-1}.field label{font-size:11px;text-transform:uppercase;font-weight:800;color:var(--muted);letter-spacing:.4px}.field input,.field select,.field textarea{border:1px solid var(--line);border-radius:13px;padding:12px;background:#fff;color:var(--ink)}.field textarea{min-height:80px;resize:vertical}.checkline{display:flex;align-items:center;gap:9px;background:#f7fafb;border:1px solid var(--line);padding:11px;border-radius:13px}.checkline input{width:19px;height:19px}.primary{width:100%;border:0;border-radius:14px;background:var(--primary);color:#fff;padding:13px;font-weight:800;margin-top:14px}.secondary{width:100%;border:1px solid var(--line);border-radius:14px;background:#fff;color:var(--ink);padding:12px;font-weight:800;margin-top:8px}.danger{color:var(--danger);border-color:#f0c7c3}.payList{margin-top:12px;display:flex;flex-direction:column;gap:8px}.payItem{border:1px solid var(--line);border-radius:14px;padding:10px;display:flex;justify-content:space-between;gap:10px}.small{font-size:12px;color:var(--muted)}
+    .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(92px + env(safe-area-inset-bottom));background:#163949;color:#fff;padding:10px 14px;border-radius:999px;font-size:12px;opacity:0;pointer-events:none;transition:.25s;z-index:200}.toast.show{opacity:1}
+    .settingsCard{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:10px}.settingsCard h3{margin:0 0 7px;font-size:16px}.settingsCard p{font-size:12px;color:var(--muted);line-height:1.5}.settingsCard .secondary{margin-top:6px}
+    @media(min-width:700px){.summary{grid-template-columns:repeat(4,1fr)}.receiptGrid{grid-template-columns:repeat(4,1fr)}.fab{right:max(24px,calc((100vw - 880px)/2 + 24px))}.sheet{border-radius:26px;margin-bottom:18px}.modalBack{align-items:center}.formGrid{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:480px){.formGrid{grid-template-columns:1fr}.field.full{grid-column:auto}.metric .v{font-size:20px}.bill{grid-template-columns:42px 1fr auto}.amount{font-size:13px}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="topline"><div><div class="brand">Mis Cuentas</div><div class="tag">Control mensual y comprobantes</div></div><button class="iconbtn" id="quickBackup" title="Crear respaldo">☁︎</button></div>
+    <div class="monthbar"><button class="iconbtn" id="prevMonth">‹</button><input id="monthPicker" type="month"><button class="iconbtn" id="nextMonth">›</button></div>
+  </header>
+
+  <main>
+    <section id="homeView" class="view active">
+      <div class="summary">
+        <div class="metric"><div class="k">Programado</div><div class="v" id="mTotal">$0</div><small>del mes</small></div>
+        <div class="metric"><div class="k">Pagado</div><div class="v" id="mPaid">$0</div><small>registrado</small></div>
+        <div class="metric"><div class="k">Pendiente</div><div class="v" id="mPending">$0</div><small>por pagar</small></div>
+        <div class="metric"><div class="k">Vencido</div><div class="v" id="mOverdue">$0</div><small>sin completar</small></div>
+      </div>
+      <div class="progressCard"><div class="progressTop"><span>Avance del mes</span><span id="progressPct">0%</span></div><div class="bar"><i id="progressBar"></i></div></div>
+      <div class="sectionTitle"><h2>Próximas cuentas</h2><span id="homeCount">0 cuentas</span></div>
+      <div id="homeList" class="list"></div>
+    </section>
+
+    <section id="billsView" class="view">
+      <div class="sectionTitle"><h2>Mis cuentas</h2><span id="billCount"></span></div>
+      <input class="search" id="billSearch" placeholder="Buscar cuenta, categoría...">
+      <div class="filters" id="statusFilters"><button class="chip active" data-status="all">Todas</button><button class="chip" data-status="pending">Pendientes</button><button class="chip" data-status="partial">Parciales</button><button class="chip" data-status="paid">Pagadas</button><button class="chip" data-status="overdue">Vencidas</button></div>
+      <div id="billList" class="list" style="margin-top:8px"></div>
+    </section>
+
+    <section id="receiptsView" class="view">
+      <div class="sectionTitle"><h2>Comprobantes</h2><span id="receiptCount"></span></div>
+      <input class="search" id="receiptSearch" placeholder="Buscar por cuenta o referencia...">
+      <div id="receiptGrid" class="receiptGrid"></div>
+    </section>
+
+    <section id="statsView" class="view">
+      <div class="sectionTitle"><h2>Estadísticas</h2><span>mes seleccionado</span></div>
+      <div class="chartCard"><strong>Gasto programado por categoría</strong><div id="categoryChart"></div></div>
+      <div class="chartCard"><strong>Pagos registrados</strong><div id="paymentChart"></div></div>
+    </section>
+
+    <section id="settingsView" class="view">
+      <div class="sectionTitle"><h2>Ajustes</h2><span>datos en tu dispositivo</span></div>
+      <div class="settingsCard"><h3>Respaldo</h3><p>Exporta todas tus cuentas, pagos y comprobantes a un archivo JSON. Guárdalo en iCloud Drive o donde prefieras.</p><button class="secondary" id="exportBtn">Exportar respaldo</button><button class="secondary" id="importBtn">Importar respaldo</button><input type="file" id="importFile" accept="application/json" hidden></div>
+      <div class="settingsCard"><h3>Instalar en iPhone</h3><p>Abre esta app en Safari, toca <b>Compartir</b> y luego <b>Agregar a pantalla de inicio</b>. Para funcionar sin conexión, primero debe abrirse una vez desde una dirección web HTTPS.</p></div>
+      <div class="settingsCard"><h3>Privacidad</h3><p>Esta versión no envía tus cuentas ni comprobantes a un servidor. Se almacenan localmente en el navegador del dispositivo mediante IndexedDB.</p></div>
+      <div class="settingsCard"><h3>Datos de prueba</h3><p>Puedes cargar un ejemplo para ver cómo funciona la aplicación.</p><button class="secondary" id="demoBtn">Cargar ejemplo</button><button class="secondary danger" id="wipeBtn">Borrar todos los datos</button></div>
+    </section>
+  </main>
+
+  <button class="fab" id="addBillFab" aria-label="Agregar cuenta">+</button>
+</div>
+
+<nav><div class="navinner">
+  <button class="navbtn active" data-view="homeView"><b>⌂</b>Inicio</button>
+  <button class="navbtn" data-view="billsView"><b>▤</b>Cuentas</button>
+  <button class="navbtn" data-view="receiptsView"><b>▣</b>Comprob.</button>
+  <button class="navbtn" data-view="statsView"><b>◔</b>Estadísticas</button>
+  <button class="navbtn" data-view="settingsView"><b>⚙︎</b>Ajustes</button>
+</div></nav>
+
+<div class="modalBack" id="billModal"><div class="sheet">
+  <div class="sheetHead"><h3 id="billModalTitle">Nueva cuenta</h3><button class="close" data-close="billModal">×</button></div>
+  <form id="billForm">
+    <input type="hidden" id="billId">
+    <div class="formGrid">
+      <div class="field full"><label>Nombre de la cuenta</label><input id="billName" required placeholder="Ej. Arriendo"></div>
+      <div class="field"><label>Categoría</label><select id="billCategory"><option>Hogar</option><option>Servicios</option><option>Tarjetas</option><option>Créditos</option><option>Transporte</option><option>Salud</option><option>Educación</option><option>Suscripciones</option><option>Otros</option></select></div>
+      <div class="field"><label>Valor programado</label><input id="billAmount" type="number" min="0" step="1" required placeholder="0"></div>
+      <div class="field"><label>Fecha de vencimiento</label><input id="billDue" type="date" required></div>
+      <div class="field"><label>Mes</label><input id="billMonth" type="month" required></div>
+      <div class="field full"><label class="checkline"><input id="billRecurring" type="checkbox"> Repetir automáticamente cada mes</label></div>
+      <div class="field full"><label>Notas</label><textarea id="billNotes" placeholder="Información adicional (opcional)"></textarea></div>
+    </div>
+    <button class="primary" type="submit">Guardar cuenta</button>
+    <button class="secondary danger" id="deleteBillBtn" type="button" style="display:none">Eliminar cuenta</button>
+  </form>
+</div></div>
+
+<div class="modalBack" id="detailModal"><div class="sheet">
+  <div class="sheetHead"><div><h3 id="detailTitle">Cuenta</h3><div class="small" id="detailSub"></div></div><button class="close" data-close="detailModal">×</button></div>
+  <div id="detailSummary" style="margin-top:14px"></div>
+  <div class="sectionTitle"><h2>Pagos</h2><span id="detailBalance"></span></div>
+  <div id="paymentList" class="payList"></div>
+  <button class="primary" id="addPaymentBtn">Registrar pago</button>
+  <button class="secondary" id="editBillBtn">Editar cuenta</button>
+</div></div>
+
+<div class="modalBack" id="paymentModal"><div class="sheet">
+  <div class="sheetHead"><h3>Registrar pago</h3><button class="close" data-close="paymentModal">×</button></div>
+  <form id="paymentForm">
+    <input type="hidden" id="paymentBillId">
+    <div class="formGrid">
+      <div class="field"><label>Valor pagado</label><input id="payAmount" type="number" min="1" step="1" required></div>
+      <div class="field"><label>Fecha de pago</label><input id="payDate" type="date" required></div>
+      <div class="field"><label>Medio de pago</label><select id="payMethod"><option>Transferencia</option><option>PSE</option><option>Débito automático</option><option>Tarjeta débito</option><option>Tarjeta crédito</option><option>Efectivo</option><option>Otro</option></select></div>
+      <div class="field"><label>Referencia</label><input id="payReference" placeholder="Opcional"></div>
+      <div class="field full"><label>Comprobante (foto o PDF)</label><input id="payReceipt" type="file" accept="image/*,application/pdf" capture="environment"></div>
+      <div class="field full"><label>Observación</label><textarea id="payNotes" placeholder="Opcional"></textarea></div>
+    </div>
+    <button class="primary" type="submit">Guardar pago</button>
+  </form>
+</div></div>
+
+<div class="modalBack" id="receiptModal"><div class="sheet">
+  <div class="sheetHead"><h3 id="receiptTitle">Comprobante</h3><button class="close" data-close="receiptModal">×</button></div>
+  <div id="receiptFull" style="margin-top:14px;text-align:center"></div>
+</div></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  const DB_NAME='mis-cuentas-db', DB_VERSION=1;
+  let db, currentBillId=null, activeStatus='all';
+  const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+  const today=()=>new Date().toISOString().slice(0,10);
+  const monthKey=(d=new Date())=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+  const money=n=>new Intl.NumberFormat('es-CO',{style:'currency',currency:'COP',maximumFractionDigits:0}).format(Number(n||0));
+  const esc=s=>String(s??'').replace(/[&<>'"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m]));
+  const uuid=()=>crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random().toString(16).slice(2);
+  const catEmoji={Hogar:'🏠',Servicios:'💡',Tarjetas:'💳',Créditos:'🏦',Transporte:'🚗',Salud:'🩺',Educación:'🎓',Suscripciones:'📱',Otros:'🧾'};
+
+  function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
+  function openModal(id){$('#'+id).classList.add('open')}
+  function closeModal(id){$('#'+id).classList.remove('open')}
+
+  function openDB(){return new Promise((res,rej)=>{const req=indexedDB.open(DB_NAME,DB_VERSION);req.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains('bills')){const s=d.createObjectStore('bills',{keyPath:'id'});s.createIndex('month','month');s.createIndex('templateId','templateId')}if(!d.objectStoreNames.contains('payments')){const s=d.createObjectStore('payments',{keyPath:'id'});s.createIndex('billId','billId');s.createIndex('date','date')}};req.onsuccess=()=>{db=req.result;res(db)};req.onerror=()=>rej(req.error)})}
+  function tx(store,mode='readonly'){return db.transaction(store,mode).objectStore(store)}
+  function all(store){return new Promise((res,rej)=>{const r=tx(store).getAll();r.onsuccess=()=>res(r.result||[]);r.onerror=()=>rej(r.error)})}
+  function get(store,id){return new Promise((res,rej)=>{const r=tx(store).get(id);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
+  function put(store,obj){return new Promise((res,rej)=>{const r=tx(store,'readwrite').put(obj);r.onsuccess=()=>res(obj);r.onerror=()=>rej(r.error)})}
+  function del(store,id){return new Promise((res,rej)=>{const r=tx(store,'readwrite').delete(id);r.onsuccess=()=>res();r.onerror=()=>rej(r.error)})}
+
+  async function ensureRecurring(month){
+    const bills=await all('bills');
+    const templates=bills.filter(b=>b.recurring && b.templateId===b.id);
+    for(const t of templates){
+      if(t.month===month) continue;
+      const exists=bills.some(b=>b.templateId===t.id && b.month===month);
+      if(!exists){
+        const dueDay=Math.min(Number(t.dueDay||t.due?.slice(-2)||1),new Date(Number(month.slice(0,4)),Number(month.slice(5,7)),0).getDate());
+        await put('bills',{...t,id:uuid(),templateId:t.id,month,due:`${month}-${String(dueDay).padStart(2,'0')}`,createdAt:Date.now()});
+      }
+    }
+  }
+
+  async function monthData(){
+    const month=$('#monthPicker').value;
+    await ensureRecurring(month);
+    const bills=(await all('bills')).filter(b=>b.month===month);
+    const payments=await all('payments');
+    const payBy={}; payments.forEach(p=>(payBy[p.billId]??=[]).push(p));
+    const enriched=bills.map(b=>{const ps=payBy[b.id]||[];const paid=ps.reduce((s,p)=>s+Number(p.amount||0),0);const rem=Math.max(0,Number(b.amount)-paid);let status='pending';if(rem<=0)status='paid';else if(paid>0)status='partial';else if(b.due<today())status='overdue';return {...b,payments:ps,paid,remaining:rem,status}});
+    return {bills:enriched,payments};
+  }
+
+  async function render(){
+    const {bills,payments}=await monthData();
+    const total=bills.reduce((s,b)=>s+Number(b.amount),0), paid=bills.reduce((s,b)=>s+b.paid,0), pending=Math.max(0,total-paid), overdue=bills.filter(b=>b.status==='overdue').reduce((s,b)=>s+b.remaining,0), pct=total?Math.min(100,paid/total*100):0;
+    $('#mTotal').textContent=money(total);$('#mPaid').textContent=money(paid);$('#mPending').textContent=money(pending);$('#mOverdue').textContent=money(overdue);$('#progressPct').textContent=Math.round(pct)+'%';$('#progressBar').style.width=pct+'%';
+    const sorted=[...bills].sort((a,b)=>a.due.localeCompare(b.due));
+    $('#homeCount').textContent=`${bills.length} cuenta${bills.length===1?'':'s'}`;
+    $('#homeList').innerHTML=sorted.length?sorted.slice(0,8).map(b=>billHTML(b)).join(''):'<div class="empty">Aún no tienes cuentas este mes.<br><b>Toca + para agregar la primera.</b></div>';
+    renderBillList(bills); renderReceipts(bills,payments); renderStats(bills,payments);
+    attachBillClicks();
+  }
+
+  function billHTML(b){const st={paid:['Pagado','st-paid'],partial:['Pago parcial','st-partial'],overdue:['Vencido','st-overdue'],pending:['Pendiente','st-pending']}[b.status];return `<div class="bill" data-bill="${b.id}"><div class="catIcon">${catEmoji[b.category]||'🧾'}</div><div><div class="billName">${esc(b.name)}</div><div class="billMeta">Vence ${new Date(b.due+'T12:00').toLocaleDateString('es-CO',{day:'numeric',month:'short'})} · ${esc(b.category)}</div><span class="status ${st[1]}">${st[0]}</span></div><div class="amount">${money(b.amount)}<div class="billMeta">${b.remaining?money(b.remaining)+' pend.':'Completo'}</div></div></div>`}
+  function renderBillList(bills){let q=$('#billSearch').value.trim().toLowerCase();let arr=bills.filter(b=>(activeStatus==='all'||b.status===activeStatus)&&(!q||`${b.name} ${b.category} ${b.notes||''}`.toLowerCase().includes(q)));$('#billCount').textContent=`${arr.length} mostradas`;$('#billList').innerHTML=arr.length?arr.sort((a,b)=>a.due.localeCompare(b.due)).map(b=>billHTML(b)).join(''):'<div class="empty">No hay cuentas para este filtro.</div>'}
+  function attachBillClicks(){$$('[data-bill]').forEach(el=>el.onclick=()=>showBill(el.dataset.bill))}
+
+  async function showBill(id){const b=await get('bills',id);if(!b)return;const ps=(await all('payments')).filter(p=>p.billId===id).sort((a,b)=>b.date.localeCompare(a.date));const paid=ps.reduce((s,p)=>s+Number(p.amount||0),0), rem=Math.max(0,Number(b.amount)-paid);currentBillId=id;$('#detailTitle').textContent=b.name;$('#detailSub').textContent=`${b.category} · vence ${new Date(b.due+'T12:00').toLocaleDateString('es-CO')}`;$('#detailSummary').innerHTML=`<div class="summary"><div class="metric"><div class="k">Programado</div><div class="v">${money(b.amount)}</div></div><div class="metric"><div class="k">Pagado</div><div class="v">${money(paid)}</div></div></div>`;$('#detailBalance').textContent=rem?`${money(rem)} pendiente`:'Pagado completo';$('#paymentList').innerHTML=ps.length?ps.map(p=>`<div class="payItem"><div><b>${money(p.amount)}</b><div class="small">${new Date(p.date+'T12:00').toLocaleDateString('es-CO')} · ${esc(p.method)}${p.reference?' · '+esc(p.reference):''}</div></div><div>${p.receiptBlob?'📎':''}</div></div>`).join(''):'<div class="empty">Aún no hay pagos registrados.</div>';openModal('detailModal')}
+
+  function renderReceipts(bills,payments){const q=$('#receiptSearch').value.trim().toLowerCase();const bm=Object.fromEntries(bills.map(b=>[b.id,b]));const arr=payments.filter(p=>p.receiptBlob&&bm[p.billId]).filter(p=>!q||`${bm[p.billId].name} ${p.reference||''}`.toLowerCase().includes(q)).sort((a,b)=>b.date.localeCompare(a.date));$('#receiptCount').textContent=`${arr.length} archivo${arr.length===1?'':'s'}`;if(!arr.length){$('#receiptGrid').innerHTML='<div class="empty" style="grid-column:1/-1">No hay comprobantes en este mes.</div>';return}$('#receiptGrid').innerHTML=arr.map(p=>{const b=bm[p.billId],isImg=p.receiptType?.startsWith('image/');const url=URL.createObjectURL(p.receiptBlob);return `<div class="receipt" data-receipt="${p.id}"><div class="receiptPreview">${isImg?`<img src="${url}" alt="Comprobante">`:'📄'}</div><div class="receiptBody"><strong>${esc(b.name)}</strong><div>${money(p.amount)} · ${new Date(p.date+'T12:00').toLocaleDateString('es-CO')}</div></div></div>`}).join('');$$('[data-receipt]').forEach(el=>el.onclick=()=>showReceipt(el.dataset.receipt))}
+  async function showReceipt(id){const p=await get('payments',id),b=await get('bills',p.billId);if(!p?.receiptBlob)return;const url=URL.createObjectURL(p.receiptBlob);$('#receiptTitle').textContent=b?.name||'Comprobante';$('#receiptFull').innerHTML=p.receiptType?.startsWith('image/')?`<img src="${url}" style="max-width:100%;border-radius:16px">`:`<iframe src="${url}" style="width:100%;height:65vh;border:0;border-radius:16px"></iframe>`;openModal('receiptModal')}
+
+  function renderStats(bills,payments){const cats={};bills.forEach(b=>cats[b.category]=(cats[b.category]||0)+Number(b.amount));const max=Math.max(1,...Object.values(cats));$('#categoryChart').innerHTML=Object.entries(cats).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="chartRow"><span>${catEmoji[k]||'🧾'} ${esc(k)}</span><div class="chartTrack"><div class="chartFill" style="width:${v/max*100}%"></div></div><span class="right">${money(v)}</span></div>`).join('')||'<div class="empty">Sin datos.</div>';const month=$('#monthPicker').value;const ps=payments.filter(p=>p.date.startsWith(month));const methods={};ps.forEach(p=>methods[p.method]=(methods[p.method]||0)+Number(p.amount));const max2=Math.max(1,...Object.values(methods));$('#paymentChart').innerHTML=Object.entries(methods).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="chartRow"><span>${esc(k)}</span><div class="chartTrack"><div class="chartFill" style="width:${v/max2*100}%"></div></div><span class="right">${money(v)}</span></div>`).join('')||'<div class="empty">Sin pagos registrados.</div>'}
+
+  async function saveBill(e){e.preventDefault();const id=$('#billId').value||uuid(),rec=$('#billRecurring').checked;const old=$('#billId').value?await get('bills',id):null;const obj={id,name:$('#billName').value.trim(),category:$('#billCategory').value,amount:Number($('#billAmount').value),due:$('#billDue').value,month:$('#billMonth').value,recurring:rec,dueDay:Number($('#billDue').value.slice(-2)),templateId:old?.templateId||id,notes:$('#billNotes').value.trim(),createdAt:old?.createdAt||Date.now()};await put('bills',obj);closeModal('billModal');toast('Cuenta guardada');render()}
+  function openNewBill(){const m=$('#monthPicker').value;$('#billForm').reset();$('#billId').value='';$('#billModalTitle').textContent='Nueva cuenta';$('#deleteBillBtn').style.display='none';$('#billMonth').value=m;$('#billDue').value=m+'-01';openModal('billModal')}
+  async function editBill(){const b=await get('bills',currentBillId);if(!b)return;closeModal('detailModal');$('#billModalTitle').textContent='Editar cuenta';$('#billId').value=b.id;$('#billName').value=b.name;$('#billCategory').value=b.category;$('#billAmount').value=b.amount;$('#billDue').value=b.due;$('#billMonth').value=b.month;$('#billRecurring').checked=!!b.recurring;$('#billNotes').value=b.notes||'';$('#deleteBillBtn').style.display='block';openModal('billModal')}
+  async function deleteBill(){const id=$('#billId').value;if(!id)return;if(!confirm('¿Eliminar esta cuenta y sus pagos?'))return;const ps=(await all('payments')).filter(p=>p.billId===id);for(const p of ps)await del('payments',p.id);await del('bills',id);closeModal('billModal');toast('Cuenta eliminada');render()}
+
+  function openPayment(){const m=$('#monthPicker').value;$('#paymentForm').reset();$('#paymentBillId').value=currentBillId;$('#payDate').value=today();openModal('paymentModal')}
+  async function savePayment(e){e.preventDefault();const file=$('#payReceipt').files[0];const p={id:uuid(),billId:$('#paymentBillId').value,amount:Number($('#payAmount').value),date:$('#payDate').value,method:$('#payMethod').value,reference:$('#payReference').value.trim(),notes:$('#payNotes').value.trim(),receiptBlob:file||null,receiptName:file?.name||null,receiptType:file?.type||null,createdAt:Date.now()};await put('payments',p);closeModal('paymentModal');closeModal('detailModal');toast('Pago registrado');render()}
+
+  async function exportBackup(){const bills=await all('bills'),payments=await all('payments');const ser=[];for(const p of payments){let receiptBase64=null;if(p.receiptBlob)receiptBase64=await blobToDataURL(p.receiptBlob);ser.push({...p,receiptBlob:undefined,receiptBase64})}const payload={app:'Mis Cuentas',version:1,exportedAt:new Date().toISOString(),bills,payments:ser};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`mis-cuentas-respaldo-${today()}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);toast('Respaldo creado')}
+  const blobToDataURL=blob=>new Promise(res=>{const r=new FileReader();r.onload=()=>res(r.result);r.readAsDataURL(blob)});
+  async function importBackup(file){try{const obj=JSON.parse(await file.text());if(!obj.bills||!obj.payments)throw new Error('Formato inválido');if(!confirm('Esto agregará/reemplazará registros con los mismos identificadores. ¿Continuar?'))return;for(const b of obj.bills)await put('bills',b);for(const p of obj.payments){let blob=null;if(p.receiptBase64){const rr=await fetch(p.receiptBase64);blob=await rr.blob()}await put('payments',{...p,receiptBlob:blob,receiptBase64:undefined})}toast('Respaldo importado');render()}catch(e){alert('No se pudo importar el respaldo: '+e.message)}}
+
+  async function loadDemo(){const m=$('#monthPicker').value;if(!confirm('¿Cargar cuentas de ejemplo en el mes seleccionado?'))return;const examples=[['Arriendo','Hogar',2500000,1,true],['Internet','Servicios',120000,8,true],['Energía','Servicios',185400,15,true],['Celular','Servicios',89900,20,true],['Tarjeta de crédito','Tarjetas',850000,25,false]];for(const [name,category,amount,day,recurring] of examples){const id=uuid();await put('bills',{id,name,category,amount,due:`${m}-${String(day).padStart(2,'0')}`,month:m,recurring,dueDay:day,templateId:id,notes:'',createdAt:Date.now()})}toast('Ejemplo cargado');render()}
+  async function wipe(){if(!confirm('¿Seguro? Se borrarán todas las cuentas, pagos y comprobantes guardados en este dispositivo.'))return;await new Promise((res,rej)=>{const tr=db.transaction(['bills','payments'],'readwrite');tr.objectStore('bills').clear();tr.objectStore('payments').clear();tr.oncomplete=res;tr.onerror=()=>rej(tr.error)});toast('Datos eliminados');render()}
+
+  function shiftMonth(n){const [y,m]=$('#monthPicker').value.split('-').map(Number);const d=new Date(y,m-1+n,1);$('#monthPicker').value=monthKey(d);render()}
+  function setupUI(){
+    $('#monthPicker').value=monthKey();$('#monthPicker').onchange=render;$('#prevMonth').onclick=()=>shiftMonth(-1);$('#nextMonth').onclick=()=>shiftMonth(1);
+    $$('.navbtn').forEach(b=>b.onclick=()=>{$$('.navbtn').forEach(x=>x.classList.remove('active'));b.classList.add('active');$$('.view').forEach(v=>v.classList.remove('active'));$('#'+b.dataset.view).classList.add('active');$('#addBillFab').style.display=b.dataset.view==='settingsView'?'none':'block';render()});
+    $$('.close').forEach(b=>b.onclick=()=>closeModal(b.dataset.close));$$('.modalBack').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')}));
+    $('#addBillFab').onclick=openNewBill;$('#billForm').onsubmit=saveBill;$('#deleteBillBtn').onclick=deleteBill;$('#editBillBtn').onclick=editBill;$('#addPaymentBtn').onclick=openPayment;$('#paymentForm').onsubmit=savePayment;
+    $('#billSearch').oninput=render;$('#receiptSearch').oninput=render;$$('#statusFilters .chip').forEach(c=>c.onclick=()=>{$$('#statusFilters .chip').forEach(x=>x.classList.remove('active'));c.classList.add('active');activeStatus=c.dataset.status;render()});
+    $('#exportBtn').onclick=exportBackup;$('#quickBackup').onclick=exportBackup;$('#importBtn').onclick=()=>$('#importFile').click();$('#importFile').onchange=e=>e.target.files[0]&&importBackup(e.target.files[0]);$('#demoBtn').onclick=loadDemo;$('#wipeBtn').onclick=wipe;
+  }
+
+  async function init(){await openDB();setupUI();await render();if('serviceWorker'in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});}
+  init().catch(e=>{console.error(e);alert('No se pudo iniciar la aplicación: '+e.message)});
+})();
+</script>
+</body>
+</html>
